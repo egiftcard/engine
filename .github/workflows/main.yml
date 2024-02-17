@@ -25,7 +25,7 @@ jobs:
         run: docker system prune -af
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: main # checkout the main branch to build nightly
 
