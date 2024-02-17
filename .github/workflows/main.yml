@@ -30,7 +30,7 @@ jobs:
           ref: main # checkout the main branch to build nightly
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
