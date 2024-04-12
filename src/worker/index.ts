@@ -1,3 +1,4 @@
+import { bundlerUserOpListener } from "./listeners/bundleUserOpListener";
 import { chainIndexerListener } from "./listeners/chainIndexerListener";
 import {
   newConfigurationListener,
@@ -21,6 +22,9 @@ export const initWorker = async () => {
 
   // Poll for mined transactions to update database
   await minedTxListener();
+
+  // Poll for user operations to bundle
+  await bundlerUserOpListener();
 
   // Delete Successfully Processed Transactions which are older than 24 hours
   await deleteProcessedTx();

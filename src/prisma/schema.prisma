@@ -185,6 +185,39 @@ model Relayers {
   @@map("relayers")
 }
 
+model Bundlers {
+  id                   String  @id @default(uuid()) @map("id")
+  name                 String? @map("name")
+  chainId              String  @map("chainId")
+  backendWalletAddress String  @map("backendWalletAddress")
+  entrypointAddress    String  @map("entrypointAddress")
+
+  @@map("bundlers")
+}
+
+model BundlerUserOperations {
+  id                   String    @id @default(uuid()) @map("id")
+  chainId              String    @map("chainId")
+  userOpHash           String    @map("userOpHash")
+  sender               String    @map("sender")
+  nonce                String    @map("nonce")
+  initCode             String    @map("initCode")
+  callData             String    @map("callData")
+  callGasLimit         String    @map("callGasLimit")
+  verificationGasLimit String    @map("verificationGasLimit")
+  preVerificationGas   String    @map("preVerificationGas")
+  maxFeePerGas         String    @map("maxFeePerGas")
+  maxPriorityFeePerGas String    @map("maxPriorityFeePerGas")
+  signature            String    @map("signature")
+  paymasterAndData     String    @map("paymasterAndData")
+  backendWalletAddress String    @map("backendWalletAddress")
+  entrypointAddress    String    @map("entrypointAddress")
+  queuedAt             DateTime  @map("queuedAt")
+  sentAt               DateTime? @map("sentAt")
+
+  @@map("bundler_user_operations")
+}
+
 model ContractSubscriptions {
   id              String @id @default(uuid()) @map("id")
   chainId         Int

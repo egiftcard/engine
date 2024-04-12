@@ -371,6 +371,7 @@ export const processTx = async () => {
               userOp,
             );
 
+            // TODO (bundler): this could go through the internal bundler if configured
             await signer.httpRpcClient.sendUserOpToBundler(userOp);
 
             // TODO: Need to update with other user op data

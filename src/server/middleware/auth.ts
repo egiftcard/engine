@@ -36,6 +36,9 @@ const authWithApiServer = async (jwt: string, domain: string) => {
   let user: User<Json> | null = null;
   try {
     user = await authenticateJWT({
+      options: {
+        domain,
+      },
       clientOptions: {
         secretKey: env.THIRDWEB_API_SECRET_KEY,
       },
@@ -66,9 +69,6 @@ const authWithApiServer = async (jwt: string, domain: string) => {
         },
       } as GenericAuthWallet,
       jwt,
-      options: {
-        domain,
-      },
     });
   } catch {
     // no-op
@@ -200,6 +200,14 @@ export const onRequest = async ({
     const relayerId = req.url.slice("/relayer/".length);
     if (uuidValidate(relayerId)) {
       // The "relay transaction" endpoint handles its own authentication.
+      return { isAuthed: true };
+    }
+  }
+
+  if (req.method === "POST" && req.url.startsWith("/bundler/")) {
+    const bundlerId = req.url.slice("/bundler/".length);
+    if (uuidValidate(bundlerId)) {
+      // The "bundle transaction" endpoint handles its own authentication.
       return { isAuthed: true };
     }
   }

@@ -105,6 +105,11 @@ import { resetBackendWalletNonces } from "./backend-wallet/resetNonces";
 import { sendTransactionBatch } from "./backend-wallet/sendTransactionBatch";
 import { simulateTransaction } from "./backend-wallet/simulateTransaction";
 import { withdraw } from "./backend-wallet/withdraw";
+import { bundler } from "./bundler";
+import { createBundler } from "./bundler/create";
+import { getAllBundlers } from "./bundler/getAll";
+import { revokeBundler } from "./bundler/revoke";
+import { updateBundler } from "./bundler/update";
 import { home } from "./home";
 import { updateRelayer } from "./relayer/update";
 import { healthCheck } from "./system/health";
@@ -194,6 +199,13 @@ export const withRoutes = async (fastify: FastifyInstance) => {
   await fastify.register(revokeRelayer);
   await fastify.register(updateRelayer);
   await fastify.register(relayTransaction);
+
+  // Bundler
+  await fastify.register(getAllBundlers);
+  await fastify.register(createBundler);
+  await fastify.register(revokeBundler);
+  await fastify.register(updateBundler);
+  await fastify.register(bundler);
 
   // Generic
   await fastify.register(readContract);
