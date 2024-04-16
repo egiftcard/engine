@@ -1,8 +1,17 @@
 import { Static, Type } from "@sinclair/typebox";
+import { type AbiFunction } from "abitype";
 import { FastifyInstance } from "fastify";
 import { StatusCodes } from "http-status-codes";
-import { queueTx } from "../../../../db/transactions/queueTx";
-import { getContract } from "../../../../utils/cache/getContract";
+import {
+  ContractOptions,
+  defineChain,
+  getContract,
+  prepareContractCall,
+  resolveMethod,
+} from "thirdweb";
+import { resolvePromisedValue } from "thirdweb/utils";
+import { queueTxRaw } from "../../../../db/transactions/queueTxRaw";
+import { thirdwebClient } from "../../../../utils/sdk";
 import {
   contractParamSchema,
   requestQuerystringSchema,
@@ -80,18 +89,40 @@ export async function writeToContract(fastify: FastifyInstance) {
 
       const chainId = await getChainIdFromChain(chain);
       const contract = await getContract({
-        chainId,
-        contractAddress,
-        walletAddress,
-        accountAddress,
+        chain: defineChain(chainId),
+        client: thirdwebClient,
+        address: contractAddress,
       });
-      const tx = await contract.prepare(functionName, args, txOverrides);
 
-      const queueId = await queueTx({
-        tx,
-        chainId,
-        simulateTx,
+      // functionName may be a function signature or name.
+      // If signature ("function mintTo(address to)"), use directly.
+      // If name, ("mintTo"), resolve the signature from the ABI (less performant).
+      let method:
+        | ((contract: Readonly<ContractOptions<[]>>) => Promise<AbiFunction>)
+        | `function ${string}`;
+      if (functionName.startsWith("function ")) {
+        method = functionName as `function ${string}`;
+      } else {
+        method = await resolveMethod(functionName);
+      }
+
+      const transaction = prepareContractCall({
+        contract,
+        method,
+        params: args,
+        value: txOverrides?.value ? BigInt(txOverrides.value) : undefined,
+      });
+
+      // @TODO: HANDLE USEROP
+
+      const { id: queueId } = await queueTxRaw({
+        chainId: chainId.toString(),
+        fromAddress: walletAddress,
+        toAddress: contractAddress,
+        accountAddress,
+        data: await resolvePromisedValue(transaction.data),
         extension: "none",
+        simulateTx,
         idempotencyKey,
       });
 
