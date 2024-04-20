@@ -1,12 +1,16 @@
+import { Static } from "@sinclair/typebox";
 import { FastifyInstance } from "fastify";
 import { StatusCodes } from "http-status-codes";
-import { getContract } from "../../../../utils/cache/getContract";
+import { readContract, resolveMethod } from "thirdweb";
+import { getContractV5 } from "../../../../utils/cache/getContractV5";
 import { readRequestQuerySchema, readSchema } from "../../../schemas/contract";
-import { partialRouteSchema } from "../../../schemas/sharedApiSchemas";
+import {
+  partialRouteSchema,
+  replyBodySchema,
+} from "../../../schemas/sharedApiSchemas";
 import { getChainIdFromChain } from "../../../utils/chain";
-import { bigNumberReplacer } from "../../../utils/convertor";
 
-export async function readContract(fastify: FastifyInstance) {
+export async function readContractAPI(fastify: FastifyInstance) {
   fastify.route<readSchema>({
     method: "GET",
     url: "/contract/:chain/:contractAddress/read",
@@ -23,19 +27,33 @@ export async function readContract(fastify: FastifyInstance) {
       const { functionName, args } = request.query;
 
       const chainId = await getChainIdFromChain(chain);
-      const contract = await getContract({
+      const contract = await getContractV5({
         chainId,
         contractAddress,
       });
 
-      let returnData = await contract.call(
-        functionName,
-        args ? args.split(",") : [],
-      );
-      returnData = bigNumberReplacer(returnData);
+      const returnData = await readContract({
+        contract: contract,
+        method: resolveMethod(functionName),
+        params: args ? args.split(",") : [],
+      });
+
+      let result: Static<typeof replyBodySchema>["result"] = "";
+      if (Array.isArray(returnData)) {
+        result = returnData.map((item) => {
+          if (typeof item === "bigint") {
+            return item.toString();
+          }
+          return item;
+        });
+      } else {
+        result =
+          //@ts-expect-error : we are not sure if returnData is a bigint or not
+          typeof returnData === "bigint" ? returnData.toString() : returnData;
+      }
 
       reply.status(StatusCodes.OK).send({
-        result: returnData,
+        result,
       });
     },
   });
